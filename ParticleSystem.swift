@@ -60,26 +60,32 @@ class ParticleSystem: ObservableObject {
         var x: Double = 0
         var y: Double = 0
         var name: String = ""
-        if pCounter == 0 {
-            angleDegrees = 0.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+        var speed: Double = Double.random(in: 10...30)
+        if pCounter%4 == 0 {
+            angleDegrees = 45 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
             x = 0.0
-            y = 0.5
+            y = 0.0
             name = "green"
-        } else if pCounter == 1 {
-            angleDegrees = 180.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
-            x = 1.0
-            y = 0.5
+            speed = 20//Double.random(in: 10...30)
+        }
+        else if pCounter%4 == 1 {
+            angleDegrees = 315 //Double.random(in: 100...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.0
+            y = 1.0
             name = "yellow"
-        } else if pCounter == 2 {
+            speed = 20//Double.random(in: 10...30)
+        } else if pCounter%4 == 2 {
             angleDegrees = 90.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
             x = 0.5
             y = 0.0
             name = "red"
-        } else if pCounter == 3 {
+            speed = 10//Double.random(in: 10...30)
+        } else if pCounter%4 == 3 {
             angleDegrees = 270.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
             x = 0.5
             y = 1.0
             name = "blue"
+            speed = 10//Double.random(in: 10...30)
         }
         
         let angleRadians = angleDegrees * .pi / 180
@@ -88,7 +94,7 @@ class ParticleSystem: ObservableObject {
             x: x,
             y: y, //Double.random(in: 0...1),
             angle: angleRadians,
-            speed: 20,
+            speed: speed, //Double.random(in: 10...30),
             name: name
         )
     }

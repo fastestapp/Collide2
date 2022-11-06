@@ -188,6 +188,79 @@ class PriorityQueue {
         return revAngle
     }
     
+    // A function that reverses angle assuming that the particles hit on center.
+    // And they must be moving toward one another, of course.
+    // So if we have a p1 angle of 190 \ and a p2 angle of 290 / then p1 must be on the right going
+    // up to the left and p2 must be on the left going up to the right. Otherwise they wouldn't collide.
+    func reverseAngleOnCollision(_ updateEvent: ParticleUpdateEvent) -> (Double, Double) {
+        var revAngleP1: Double = 0.0
+        var revAngleP2: Double = 0.0
+        var angle1 = updateEvent.p1.angle
+        var angle2 = updateEvent.p2?.angle ?? 0.0
+        let o = 1.5 * .pi //270
+        let t = (3.0 * .pi) //540
+        
+        // Case where both are going up; angle2 up and left; angle1 up and right:
+        if (angle2 >= .pi && angle2 <= 1.5 * .pi) &&
+            (angle1 >= 1.5 * .pi && angle1 <= 2 * .pi) {
+            revAngleP2 = (3.0 * .pi) - angle2
+            revAngleP1 = (3.0 * .pi) - angle1
+        }
+        
+        // Case where both are going up; angle1 up and left; angle2 up and right:
+        else if (angle1 >= .pi && angle1 <= 1.5 * .pi) &&
+            (angle2 >= 1.5 * .pi && angle2 <= 2 * .pi) {
+            revAngleP2 = (3.0 * .pi) - angle2
+            revAngleP1 = (3.0 * .pi) - angle1
+        }
+        
+        // Case where both are going down; angle2 down and left; angle1 down and right:
+        else if (angle2 >= 0.5 * .pi && angle2 <= .pi) &&
+            (angle1 >= 0.0 && angle1 <= 0.5 * .pi) {
+            revAngleP2 = .pi - angle2
+            revAngleP1 = .pi - angle1
+        }
+        
+        // Case where both are going down; angle1 down and left; angle2 down and right:
+        else if (angle1 >= 0.5 * .pi && angle1 <= .pi) &&
+                    (angle2 >= 0.0 && angle2 <= 0.5 * .pi) {
+            revAngleP2 = .pi - angle2
+            revAngleP1 = .pi - angle1
+        }
+        
+        // Case where both are going left; angle2 left and down; angle1 left and up:
+        else if (angle2 >= 0.5 * .pi && angle2 <= .pi) &&
+                    (angle1 >= .pi && angle1 <= 1.5 * .pi) {
+            revAngleP2 = (2 * .pi) - angle2
+            revAngleP1 = (2 * .pi) - angle1
+        }
+        
+        // Case where both are going left; angle1 left and down; angle2 left and up:
+        else if (angle1 >= 0.5 * .pi && angle1 <= .pi) &&
+                    (angle2 >= .pi && angle2 <= 1.5 * .pi) {
+            revAngleP2 = (2 * .pi) - angle2
+            revAngleP1 = (2 * .pi) - angle1
+        }
+        
+        // Case where both are going right; angle2 right and down; angle1 right and up:
+        else if (angle2 >= 0 && angle2 <= 0.5 * .pi) &&
+                    (angle1 >= 1.5 * .pi && angle1 <= 2 * .pi) {
+            revAngleP2 = (2 * .pi) - angle2
+            revAngleP1 = (2 * .pi) - angle2
+        }
+        
+        // Case where both are going right; angle1 right and down; angle2 right and up:
+        else if (angle1 >= 0 && angle1 <= 0.5 * .pi) &&
+                    (angle2 >= 1.5 * .pi && angle2 <= 2 * .pi) {
+            revAngleP1 = (2 * .pi) - angle1
+            revAngleP2 = (2 * .pi) - angle2
+        }
+        
+        // Handle the same directions next:
+
+        return (revAngleP1, revAngleP2)
+    }
+    
     var counter1 = 0
     public func runPriorityQueue(particleSystem: ParticleSystem) {
         var done: Bool = false
@@ -223,8 +296,8 @@ class PriorityQueue {
         let particles = particleSystem.particles
         // Find all the wall collisions:
         for particle in particles {
-            let hTime = particle.timeUntilVertWallCollision()
-            let vTime = particle.timeUntilHorizWallCollision()
+            let vTime = particle.timeUntilVertWallCollision()
+            let hTime = particle.timeUntilHorizWallCollision()
             var timeToHit: Double = 0.0
             var wall: Wall
             
@@ -272,13 +345,14 @@ class PriorityQueue {
     public func evaluateCurrentParticlesCollision(_ particleSystem: ParticleSystem, _ updateEvent: ParticleUpdateEvent) {// Since it's a wall event, there's only one particle, p1:
         var ps = particleSystem
         let p1 = updateEvent.p1
-        let p2 = updateEvent.p2
-        p1.angle = reverseAngle(p1.angle)
-        if let p2 = p2 {
-            p2.angle = reverseAngle(p2.angle)
-            if p2.angle > 6.28 && p2.angle < 6.3 {
-                p2.angle = 0
-            }
+        if let p2 = updateEvent.p2 {
+            (p1.angle, p2.angle) = reverseAngleOnCollision(updateEvent)
+//            if let p2 = p2 {
+//                p2.angle = reverseAngle(p2.angle)
+//                if p2.angle > 6.28 && p2.angle < 6.3 {
+//                    p2.angle = 0
+//                }
+//            }
         }
     }
     

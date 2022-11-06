@@ -105,33 +105,29 @@ class Particle: Hashable, Equatable {
         let xDist = (self.x - particle.x) * width
         let yDist = (self.y - particle.y) * height
 
-        var xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
+        let xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
         let yVeloDiff = (yVelocity(self.speed, self.angle) * 12) - (yVelocity(particle.speed, particle.angle) * 12)
         
-        var netVector = xDist * xVeloDiff + yDist * yVeloDiff
+        let netVector = xDist * xVeloDiff + yDist * yVeloDiff
         
         if netVector > 0 {
             return -1
         }
 
-        // netVector is m*m / s
-        // sum of velocities squared is m*m/s*s
-        // sum of distances squared is m*m
         let sumOfVelocitiesSquared = ((xVeloDiff ) * (xVeloDiff )) + (yVeloDiff * yVeloDiff)
         let sumOfDistancesSquared = (xDist * xDist) + (yDist * yDist)
     
         _ = calculateRadius()
 
-        let twoRadiuses = 2.0// * 0.2
+        let twoRadiuses = 20.0// * 0.2
         
         let d = (netVector * netVector) - sumOfVelocitiesSquared * (sumOfDistancesSquared - twoRadiuses * twoRadiuses)
-        // = m*m*m*m / s*s - m*m/s*s * (m*m) = m*m*m*m / s*s
+        
         if d < 0 {
             return -1
         }
-        // sqrt d is m*m / s
+        
         let collision = abs((netVector + sqrt(d)) / (sumOfVelocitiesSquared))
-       // collision is mm/s / mm/ss = mmss / smm = s
         
         if collision > 0 {
             return collision
