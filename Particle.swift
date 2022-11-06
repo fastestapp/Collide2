@@ -11,6 +11,13 @@
 import Foundation
 import UIKit
 
+enum ParticleColor: String {
+    case red
+    case blue
+    case green
+    case yellow
+}
+
 class Particle: Hashable, Equatable {
     let id = UUID()
     
@@ -23,13 +30,14 @@ class Particle: Hashable, Equatable {
     var speed: Double
     // Radius
     var radius: Double = 0.005
-    var name: String = ""
+    var name: String
     
-    init(x: Double, y: Double, angle: Double, speed: Double) {
+    init(x: Double, y: Double, angle: Double, speed: Double, name: String) {
         self.x = x
         self.y = y
         self.angle = angle
         self.speed = speed
+        self.name = name
     }
     
     static func ==(lhs: Particle, rhs: Particle) -> Bool {
@@ -72,6 +80,7 @@ class Particle: Hashable, Equatable {
         let distanceFromTop = yPosition * height
         let distanceFromBottom = height - (yPosition * height)
         let yVelocity = abs(yVelocity(self.speed, self.angle))
+        
         // going down:
         if (self.angle > 0 && self.angle < .pi) {
             if yVelocity == 0 {
@@ -90,33 +99,14 @@ class Particle: Hashable, Equatable {
     }
     
     func evaluateNextParticleCollision(_ particle: Particle) -> Double? {
-        
         // The distance between the two particles at the start, in terms of x and y:
-        var xDist = (self.x - particle.x)
-        let yDist = particle.y - self.y
-
-        // The difference in speeds between the two particles, in terms of x and y.
-        // Test this: The two velocity vectors need to be opposite each other in order for the particles to collide?
-        // Not true. One can catch up to another from behind. Consider the two cases:
-        // 1. Two particles are headed directly toward each other with a y component of 0 and each with an x velocity of 20 or -20. In that case, starting at 0 and 1, they will hit each other at 0.5 with a combined velocity of 40.
-        // How to calculate this? The point in the middle, where they meet, is distance x = 0.5.
-        // They have to meet at the same time.
-        // The actual time when they meed is
-        
         let width = UIScreen.main.bounds.width
-        let xPosition = self.x
-        let pixelsFromLeft = xPosition * width
-        let xVelocity1 = (xVelocity(self.speed, self.angle)) // in units per second
-        let testxVelocity1 = xVelocity(self.speed, self.angle)
-        let timeToHit = (0.5 * width) / (xVelocity1 * 8.4)
-        // about 2.4
-        xDist = xDist * width
-        
-        let test1 = xVelocity(particle.speed, particle.angle)
-        let test2 = xVelocity(self.speed, self.angle)
-        
+        let height = UIScreen.main.bounds.height
+        let xDist = (self.x - particle.x) * width
+        let yDist = (self.y - particle.y) * height
+
         var xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
-        let yVeloDiff = yVelocity(particle.speed, particle.angle) - yVelocity(self.speed, self.angle)
+        let yVeloDiff = (yVelocity(self.speed, self.angle) * 12) - (yVelocity(particle.speed, particle.angle) * 12)
         
         var netVector = xDist * xVeloDiff + yDist * yVeloDiff
         
@@ -124,7 +114,6 @@ class Particle: Hashable, Equatable {
             return -1
         }
 
-        
         // netVector is m*m / s
         // sum of velocities squared is m*m/s*s
         // sum of distances squared is m*m
@@ -144,7 +133,6 @@ class Particle: Hashable, Equatable {
         let collision = abs((netVector + sqrt(d)) / (sumOfVelocitiesSquared))
        // collision is mm/s / mm/ss = mmss / smm = s
         
-
         if collision > 0 {
             return collision
         }
@@ -159,15 +147,13 @@ class Particle: Hashable, Equatable {
 
     func yVelocity(_ speed: Double, _ radians: Double) -> Double {
         var yVelocity: Double = 0
-        // The cos of 80 degrees is 0.1736
         // going down:
-        if ( (radians > 0)  && (radians < .pi) ) {
+        if ( radians > 0  && radians < .pi ) {
             yVelocity = sin(radians) * speed
+            print("yVelocity: \(yVelocity)")
         } else {
             yVelocity = sin(radians) * speed
-        }
-        if yVelocity < 0.0001 {
-            yVelocity = 0.0
+            print("yVelocity: \(yVelocity)")
         }
         return yVelocity
     }
@@ -178,10 +164,8 @@ class Particle: Hashable, Equatable {
         if ( (radians > (1.5 * .pi))  && (radians <= (2.0 * .pi)) ) ||
             ( (radians >= 0) && (radians < (0.5 * .pi)) ) {
             xVelocity = cos(radians) * speed
-            print("xVelocity: \(xVelocity)")
         } else if ( radians > (0.5 * .pi)  && (radians < (1.5 * .pi)) ) {
             xVelocity = cos(radians) * speed
-            print("xVelocity: \(xVelocity)")
         }
         return xVelocity
     }

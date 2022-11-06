@@ -11,9 +11,7 @@
 import SwiftUI
 
 class ParticleSystem: ObservableObject {
-    var particleCount = 2
-    let image = Image("disk")
-    let image2 = Image("disk2")
+    var particleCount = 4
     var particles = Array<Particle>()
     var lastUpdate = Date()
     var lastCreationDate = Date()
@@ -59,24 +57,39 @@ class ParticleSystem: ObservableObject {
     var counter = 0
     private func createParticle(_ pCounter: Int) -> Particle {
         var angleDegrees = 0.0
-        if counter == 0 {
-            angleDegrees = 0.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
-            counter += 1
-        } else if counter == 1 {
-            angleDegrees = 180.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
-        }
-        let angleRadians = angleDegrees * .pi / 180
         var x: Double = 0
+        var y: Double = 0
+        var name: String = ""
         if pCounter == 0 {
+            angleDegrees = 0.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
             x = 0.0
-        } else {
+            y = 0.5
+            name = "green"
+        } else if pCounter == 1 {
+            angleDegrees = 180.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
             x = 1.0
+            y = 0.5
+            name = "yellow"
+        } else if pCounter == 2 {
+            angleDegrees = 90.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.5
+            y = 0.0
+            name = "red"
+        } else if pCounter == 3 {
+            angleDegrees = 270.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.5
+            y = 1.0
+            name = "blue"
         }
+        
+        let angleRadians = angleDegrees * .pi / 180
+        
         return Particle (
             x: x,
-            y: 0.5, //Double.random(in: 0...1),
+            y: y, //Double.random(in: 0...1),
             angle: angleRadians,
-            speed: 20
+            speed: 20,
+            name: name
         )
     }
     

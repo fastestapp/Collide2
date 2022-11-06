@@ -21,21 +21,14 @@ struct CollisionsView: View {
                 particleSystem.update(date: timeline.date)
                 let baseTransform = context.transform
                 
-                var counter = 0
                 for particle in particleSystem.particles {
                     let xPos = particle.x * size.width
                     let yPos = particle.y * size.height
                     
                     context.translateBy(x: xPos, y: yPos)
-                    if counter == 0 {
-                        particle.name = "red"
-                        context.draw(particleSystem.image, at: .zero)
-                    } else {
-                        particle.name = "blue"
-                        context.draw(particleSystem.image2, at: .zero)
-                    }
+                    
+                    context.draw(Image(particle.name), at: .zero)
                     context.transform = baseTransform
-                    counter += 1
                 }
             }
         }
