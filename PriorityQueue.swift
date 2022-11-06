@@ -32,7 +32,7 @@ class PriorityQueue {
             if PQ.count > maxPQSize {
                 PQ = deleteMaximum(PQ)
             }
-            print("appended")
+//            print("appended")
         } else {
             print("preexisting")
         }
@@ -183,69 +183,91 @@ class PriorityQueue {
         }
         return revAngle
     }
+    
     var counter1 = 0
     public func runPriorityQueue(particleSystem: ParticleSystem) {
         var done: Bool = false
+        var updateEvent: ParticleUpdateEvent = PQ[PQ.count - 1]
+        var eventOccurred = false
+        
         while !done && PQ.count > 1 {
-            let updateEvent = PQ[PQ.count - 1]
+            updateEvent = PQ[PQ.count - 1]
             // Evaluate current event, then evaluate next events.
             
-//            print("PQ count is \(self.PQ.count)")
-            
-            if self.PQ.count == 3 {
-                print("here")
-            }
-            
-            if updateEvent.updateTime <= Date() && (updateEvent.p2 == nil || updateEvent.p1 == nil) {
-                print("counter1: \(counter1)")
-                counter1 += 1
+            if updateEvent.updateTime <= Date() && updateEvent.p2 == nil {
                 evaluateCurrentWallCollision(updateEvent)
-                // Then delete the event from the queue because it's evaluated:
                 PQ = deleteMinimum(PQ)
-                
-                evaluateNextCollisions(after:updateEvent, particleSystem: particleSystem)
-            } else if updateEvent.updateTime <= Date() && updateEvent.p2 != nil{
+                eventOccurred = true
+            } else if updateEvent.updateTime <= Date() && updateEvent.p2 != nil {
                 evaluateCurrentParticlesCollision(particleSystem, updateEvent)
-                // This is a two particle collision event
-                let p1 = updateEvent.p1
-                
-                let p2 = updateEvent.p2
-                
-//                updateEvent.p1.angle = reverseAngleVWall(updateEvent.p1.angle)
-                
-//                updateEvent.p2!.angle = reverseAngleVWall(updateEvent.p2!.angle)
-//                reverseAngleVWall(updateEvent.p1.angle)
-//                reverseAngleVWall(updateEvent.p2!.angle)
-//                updateEvent.p2!.angle = reverseAngleVWall(updateEvent.p2!.angle)
- 
                 PQ = deleteMinimum(PQ)
-                
-                evaluateNextCollisions(after: updateEvent, particleSystem: particleSystem)
+                eventOccurred = true
             } else {
                 done = true
+            }
+        }
+        
+        if eventOccurred && ( done || PQ.count == 1) {
+            evaluateNextCollisions(particleSystem: particleSystem)
+            eventOccurred = false
+        }
+    }
+    
+    // Evaluate all future collisions for a given particle: wall or other particles
+    public func evaluateNextCollisions(particleSystem: ParticleSystem) {
+        
+        let particles = particleSystem.particles
+        // Find all the wall collisions:
+        for particle in particles {
+            let hTime = particle.timeUntilVertWallCollision()
+            let vTime = particle.timeUntilHorizWallCollision()
+            var timeToHit: Double = 0.0
+            
+            if vTime < Double.infinity && hTime < Double.infinity {
+                timeToHit = (hTime < vTime ? hTime : vTime)
+            } else if vTime < Double.infinity {
+                timeToHit = vTime
+            } else {
+                timeToHit = hTime
+            }
+            
+            if timeToHit > 0 {
+                let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
+                let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
+                let particleUpdateEvent = ParticleUpdateEvent(P1: particle, P2: nil, updateTime: updateDate)
+                self.insert(x: particleUpdateEvent)
+            }
+        }
+        
+        // Find all the particle collisions:
+        for i in 0..<particles.count {
+            for j in 0..<particles.count {
+                let p1 = particles[i]
+                let p2 = particles[j]
+                if i != j {
+                    let timeToHit = p1.evaluateNextParticleCollision(p2)
+                    if let timeToHit = timeToHit, timeToHit > 0 {
+                        let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
+                        let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
+                        let particleUpdateEvent = ParticleUpdateEvent(P1: p1, P2: p2, updateTime: updateDate)
+                        self.insert(x: particleUpdateEvent)
+                    }
+                }
             }
         }
     }
     
     public func evaluateCurrentParticlesCollision(_ particleSystem: ParticleSystem, _ updateEvent: ParticleUpdateEvent) {// Since it's a wall event, there's only one particle, p1:
         var ps = particleSystem
-        print("first particle Angle: \(ps.particles[0].angle)")
-        print("second particle Angle: \(ps.particles[1].angle)")
-        print("p1 angle: \(updateEvent.p1.angle)")
-        print("p2 angle: \(updateEvent.p2!.angle)")
         let p1 = updateEvent.p1
         let p2 = updateEvent.p2
         p1.angle = reverseAngleVWall(p1.angle)
-        print("first particle Angle: \(ps.particles[0].angle)")
         if let p2 = p2 {
             p2.angle = reverseAngleVWall(p2.angle)
             if p2.angle > 6.28 && p2.angle < 6.3 {
                 p2.angle = 0
             }
         }
-        
-        print("p1 angle: \(updateEvent.p1.angle)")
-        print("p2 angle: \(updateEvent.p2!.angle)")
     }
     
     public func evaluateCurrentWallCollision(_ updateEvent: ParticleUpdateEvent) {
@@ -259,51 +281,6 @@ class PriorityQueue {
         if xPosition < 0.003 {
             particle.x = 0.003
             particle.angle = reverseAngleVWall(particle.angle)
-        }
-    }
-    
-    // Evaluate all future collisions for a given particle: wall or other particles
-    public func evaluateNextCollisions(after event:ParticleUpdateEvent, particleSystem: ParticleSystem) {
-        // Find the next wall events for the particles in the current event:
-        evaluateNextWallCollision(event.p1)
-        if let eventp2 = event.p2 {
-            evaluateNextWallCollision(eventp2)
-        }
-        
-        // Find the next collision with any other particle:
-        for particle in particleSystem.particles {
-            let timeToHit = particle.evaluateNextParticleCollision(event.p1) ?? 0.0
-            if timeToHit > 0 {
-                let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
-                let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
-                let particleUpdateEvent = ParticleUpdateEvent(P1: particle, P2: nil, updateTime: updateDate)
-                self.insert(x: particleUpdateEvent)
-            }
-        }
-        
-        for particle in particleSystem.particles {
-            if let event = event.p2 {
-                let timeToHit = particle.evaluateNextParticleCollision(event) ?? 0.0
-                if timeToHit > 0 {
-                    let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
-                    let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
-                    let particleUpdateEvent = ParticleUpdateEvent(P1: particle, P2: nil, updateTime: updateDate)
-                    self.insert(x: particleUpdateEvent)
-                }
-            }
-        }
-    }
-    
-    public func evaluateNextWallCollision(_ particle: Particle) {
-        let hTime = particle.timeUntilVertWallCollision()
-        let vTime = particle.timeUntilHorizWallCollision()
-
-        let timeToHit = (hTime < vTime ? hTime : vTime)
-        if timeToHit > 0 {
-            let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
-            let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
-            let particleUpdateEvent = ParticleUpdateEvent(P1: particle, P2: nil, updateTime: updateDate)
-            self.insert(x: particleUpdateEvent)
         }
     }
 }

@@ -42,49 +42,11 @@ class ParticleSystem: ObservableObject {
         }
         
         if !didInitialBounceCheck {
-            // Find all the wall collisions:
-            for particle in particles {
-                let hTime = particle.timeUntilVertWallCollision()
-                let vTime = particle.timeUntilHorizWallCollision()
-                var timeToHit: Double = 0.0
-                
-                if vTime < Double.infinity && hTime < Double.infinity {
-                    timeToHit = (hTime < vTime ? hTime : vTime)
-                } else if vTime < Double.infinity {
-                    timeToHit = vTime
-                } else {
-                    timeToHit = hTime
-                }
-                
-                if timeToHit > 0 {
-                    let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
-                    let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
-                    let particleUpdateEvent = ParticleUpdateEvent(P1: particle, P2: nil, updateTime: updateDate)
-                    priorityQueue.insert(x: particleUpdateEvent)
-                }
-            }
-            
-            // Find all the particle collisions:
-            for i in 0..<particles.count {
-                for j in 0..<particles.count {
-                    let p1 = particles[i]
-                    let p2 = particles[j]
-                    if i != j {
-                        let timeToHit = p1.evaluateNextParticleCollision(p2)
-                        if let timeToHit = timeToHit, timeToHit > 0 {
-                            let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
-                            let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
-                            let particleUpdateEvent = ParticleUpdateEvent(P1: p1, P2: p2, updateTime: updateDate)
-                            priorityQueue.insert(x: particleUpdateEvent)
-                        }
-                    }
-                }
-            }
+            priorityQueue.evaluateNextCollisions(particleSystem: self)
             didInitialBounceCheck = true
         }
         
         // Update all the positions.
-        
         for particle in particles {
             particle.x += cos(particle.angle) * particle.speed / 100 * elapsedTime
             particle.y += sin(particle.angle) * particle.speed / 100 * elapsedTime

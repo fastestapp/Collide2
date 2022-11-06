@@ -92,7 +92,7 @@ class Particle: Hashable, Equatable {
     func evaluateNextParticleCollision(_ particle: Particle) -> Double? {
         
         // The distance between the two particles at the start, in terms of x and y:
-        var xDist = particle.x - self.x
+        var xDist = (self.x - particle.x)
         let yDist = particle.y - self.y
 
         // The difference in speeds between the two particles, in terms of x and y.
@@ -106,40 +106,46 @@ class Particle: Hashable, Equatable {
         let width = UIScreen.main.bounds.width
         let xPosition = self.x
         let pixelsFromLeft = xPosition * width
-        let xVelocity1 = abs(xVelocity(self.speed, self.angle)) // in units per second
+        let xVelocity1 = (xVelocity(self.speed, self.angle)) // in units per second
+        let testxVelocity1 = xVelocity(self.speed, self.angle)
         let timeToHit = (0.5 * width) / (xVelocity1 * 8.4)
         // about 2.4
         xDist = xDist * width
         
-        _ = xVelocity(particle.speed, particle.angle)
-        _ = xVelocity(self.speed, self.angle)
+        let test1 = xVelocity(particle.speed, particle.angle)
+        let test2 = xVelocity(self.speed, self.angle)
         
-        var xVeloDiff = (xVelocity(particle.speed, particle.angle) * 8.4) - (xVelocity(self.speed, self.angle) * 8.4)
+        var xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
         let yVeloDiff = yVelocity(particle.speed, particle.angle) - yVelocity(self.speed, self.angle)
         
-        let netVector = xDist * xVeloDiff + yDist * yVeloDiff
-
+        var netVector = xDist * xVeloDiff + yDist * yVeloDiff
+        
         if netVector > 0 {
             return -1
         }
+
         
+        // netVector is m*m / s
+        // sum of velocities squared is m*m/s*s
+        // sum of distances squared is m*m
         let sumOfVelocitiesSquared = ((xVeloDiff ) * (xVeloDiff )) + (yVeloDiff * yVeloDiff)
         let sumOfDistancesSquared = (xDist * xDist) + (yDist * yDist)
     
         _ = calculateRadius()
 
         let twoRadiuses = 2.0// * 0.2
-        let d = (netVector * netVector) - sumOfVelocitiesSquared * (sumOfDistancesSquared - twoRadiuses * twoRadiuses)
         
+        let d = (netVector * netVector) - sumOfVelocitiesSquared * (sumOfDistancesSquared - twoRadiuses * twoRadiuses)
+        // = m*m*m*m / s*s - m*m/s*s * (m*m) = m*m*m*m / s*s
         if d < 0 {
             return -1
         }
+        // sqrt d is m*m / s
+        let collision = abs((netVector + sqrt(d)) / (sumOfVelocitiesSquared))
+       // collision is mm/s / mm/ss = mmss / smm = s
         
-        let collision = -(netVector + sqrt(d)) / (sumOfVelocitiesSquared)
 
-//        print("collision calc is: \(collision)")
         if collision > 0 {
-//            print("collision is: \(collision)")
             return collision
         }
         return nil
@@ -168,12 +174,14 @@ class Particle: Hashable, Equatable {
     
     func xVelocity(_ speed: Double, _ radians: Double) -> Double {
         var xVelocity: Double = 0
-        // going down:
+        // going right:
         if ( (radians > (1.5 * .pi))  && (radians <= (2.0 * .pi)) ) ||
             ( (radians >= 0) && (radians < (0.5 * .pi)) ) {
             xVelocity = cos(radians) * speed
+            print("xVelocity: \(xVelocity)")
         } else if ( radians > (0.5 * .pi)  && (radians < (1.5 * .pi)) ) {
             xVelocity = cos(radians) * speed
+            print("xVelocity: \(xVelocity)")
         }
         return xVelocity
     }
