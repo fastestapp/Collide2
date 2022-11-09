@@ -11,7 +11,7 @@
 import SwiftUI
 
 class ParticleSystem: ObservableObject {
-    var particleCount = 4
+    var particleCount = 8
     var particles = Array<Particle>()
     var lastUpdate = Date()
     var lastCreationDate = Date()
@@ -31,9 +31,10 @@ class ParticleSystem: ObservableObject {
         let elapsedTime = date.timeIntervalSince1970 - lastUpdate.timeIntervalSince1970
         lastUpdate = date
         
-        // Create the particles or add them to maintain. However, if it's working, none should get lost:
+        // Create the particles.
         var pCounter = 0
         while particles.count < particleCount {
+            
             particles.append(createParticle(pCounter))
             pCounter += 1
             lastCreationDate = date
@@ -60,42 +61,66 @@ class ParticleSystem: ObservableObject {
         var x: Double = 0
         var y: Double = 0
         var name: String = ""
-        var speed: Double = Double.random(in: 10...30)
-        if pCounter%4 == 0 {
-            angleDegrees = 45 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
-            x = 0.0
-            y = 0.0
+        var speed: Double = 20 //Double.random(in: 10...30)
+        var particleIndex: Int = 0
+        if pCounter%8 == 0 {
+            angleDegrees = 160 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 1.0
+            y = Double.random(in: 0...1)
             name = "green"
-            speed = 20//Double.random(in: 10...30)
-        }
-        else if pCounter%4 == 1 {
-            angleDegrees = 315 //Double.random(in: 100...260) + Double.random(in: -angleRange / 2...angleRange / 2)
-            x = 0.0
-            y = 1.0
+            speed = 20
+        } else if pCounter%8 == 1 {
+            angleDegrees = 170 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 1.0
+            y = Double.random(in: 0...1)
             name = "yellow"
-            speed = 20//Double.random(in: 10...30)
-        } else if pCounter%4 == 2 {
-            angleDegrees = 90.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
-            x = 0.5
-            y = 0.0
+            speed = 20
+        } else if pCounter%8 == 2 {
+            angleDegrees = 180 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 1.0
+            y = Double.random(in: 0...1)
             name = "red"
-            speed = 10//Double.random(in: 10...30)
-        } else if pCounter%4 == 3 {
-            angleDegrees = 270.0 //Double.random(in: 270...360) + Double.random(in: -angleRange / 2...angleRange / 2)
-            x = 0.5
-            y = 1.0
+            speed = 20
+        } else if pCounter%8 == 3 {
+            angleDegrees = 190 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 1.0
+            y = Double.random(in: 0...1)
             name = "blue"
-            speed = 10//Double.random(in: 10...30)
+            speed = 20
+        } else if pCounter%8 == 4 {
+            angleDegrees = 300 //Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.0
+            y = Double.random(in: 0...1)
+            name = "green"
+        } else if pCounter%8 == 5 {
+            angleDegrees = 320 // Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.0
+            y = Double.random(in: 0...1)
+            name = "yellow"
+            speed = 20
+        } else if pCounter%8 == 6 {
+            angleDegrees = 350 //Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.0
+            y = Double.random(in: 0...1)
+            name = "red"
+            speed = 20
+        } else if pCounter%8 == 7 {
+            angleDegrees = 45 //Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            x = 0.0
+            y = Double.random(in: 0...1)
+            name = "blue"
+            speed = 20
         }
         
         let angleRadians = angleDegrees * .pi / 180
         
         return Particle (
             x: x,
-            y: y, //Double.random(in: 0...1),
+            y: y,
             angle: angleRadians,
-            speed: speed, //Double.random(in: 10...30),
-            name: name
+            speed: speed,
+            name: name,
+            particleIndex: pCounter
         )
     }
     

@@ -31,13 +31,16 @@ class Particle: Hashable, Equatable {
     // Radius
     var radius: Double = 0.005
     var name: String
+    var lastHitParticle: Int?
+    var particleIndex: Int
     
-    init(x: Double, y: Double, angle: Double, speed: Double, name: String) {
+    init(x: Double, y: Double, angle: Double, speed: Double, name: String, particleIndex: Int) {
         self.x = x
         self.y = y
         self.angle = angle
         self.speed = speed
         self.name = name
+        self.particleIndex = particleIndex
     }
     
     static func ==(lhs: Particle, rhs: Particle) -> Bool {
@@ -105,6 +108,7 @@ class Particle: Hashable, Equatable {
         let xDist = (self.x - particle.x) * width
         let yDist = (self.y - particle.y) * height
 
+
         let xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
         let yVeloDiff = (yVelocity(self.speed, self.angle) * 12) - (yVelocity(particle.speed, particle.angle) * 12)
         
@@ -119,17 +123,21 @@ class Particle: Hashable, Equatable {
     
         _ = calculateRadius()
 
-        let twoRadiuses = 20.0// * 0.2
+        let twoRadiuses = 42.0 // This is an approximation.
         
         let d = (netVector * netVector) - sumOfVelocitiesSquared * (sumOfDistancesSquared - twoRadiuses * twoRadiuses)
         
-        if d < 0 {
+        if d < 0.01 {
             return -1
         }
         
         let collision = abs((netVector + sqrt(d)) / (sumOfVelocitiesSquared))
         
         if collision > 0 {
+            
+            if particle.name == "blue" && self.name == "yellow" {
+//                print("here")
+            }
             return collision
         }
         return nil
@@ -146,10 +154,8 @@ class Particle: Hashable, Equatable {
         // going down:
         if ( radians > 0  && radians < .pi ) {
             yVelocity = sin(radians) * speed
-            print("yVelocity: \(yVelocity)")
         } else {
             yVelocity = sin(radians) * speed
-            print("yVelocity: \(yVelocity)")
         }
         return yVelocity
     }
