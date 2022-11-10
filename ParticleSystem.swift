@@ -61,51 +61,50 @@ class ParticleSystem: ObservableObject {
         var x: Double = 0
         var y: Double = 0
         var name: String = ""
-        var speed: Double = 20 //Double.random(in: 10...30)
-        var particleIndex: Int = 0
+        var speed: Double = 20
         if pCounter%8 == 0 {
-            angleDegrees = 160 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 160
             x = 1.0
             y = Double.random(in: 0...1)
             name = "green"
             speed = 20
         } else if pCounter%8 == 1 {
-            angleDegrees = 170 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 170
             x = 1.0
             y = Double.random(in: 0...1)
             name = "yellow"
             speed = 20
         } else if pCounter%8 == 2 {
-            angleDegrees = 180 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 180
             x = 1.0
             y = Double.random(in: 0...1)
             name = "red"
             speed = 20
         } else if pCounter%8 == 3 {
-            angleDegrees = 190 //Double.random(in: 120...260) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 190
             x = 1.0
             y = Double.random(in: 0...1)
             name = "blue"
             speed = 20
         } else if pCounter%8 == 4 {
-            angleDegrees = 300 //Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 300
             x = 0.0
             y = Double.random(in: 0...1)
             name = "green"
         } else if pCounter%8 == 5 {
-            angleDegrees = 320 // Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 320
             x = 0.0
             y = Double.random(in: 0...1)
             name = "yellow"
             speed = 20
         } else if pCounter%8 == 6 {
-            angleDegrees = 350 //Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 350
             x = 0.0
             y = Double.random(in: 0...1)
             name = "red"
             speed = 20
         } else if pCounter%8 == 7 {
-            angleDegrees = 45 //Double.random(in: 300...360) + Double.random(in: -angleRange / 2...angleRange / 2)
+            angleDegrees = 45
             x = 0.0
             y = Double.random(in: 0...1)
             name = "blue"

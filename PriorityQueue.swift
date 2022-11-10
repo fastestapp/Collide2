@@ -194,8 +194,6 @@ class PriorityQueue {
         var done: Bool = false
         var updateEvent: ParticleUpdateEvent = PQ[PQ.count - 1]
         var eventOccurred = false
-//        let beforeCount = PQ.count
-        
         while !done && PQ.count > 1 {
             updateEvent = PQ[PQ.count - 1]
             if updateEvent.updateTime <= Date() && updateEvent.p2 == nil {
@@ -210,11 +208,6 @@ class PriorityQueue {
                 done = true
             }
         }
-//        let afterCount = PQ.count
-//        if afterCount < beforeCount {
-//            print("the number updated this cycle = \(beforeCount - afterCount)")
-//        }
-        
         if eventOccurred && ( done || PQ.count == 1) {
             evaluateNextCollisions(particleSystem: particleSystem)
             eventOccurred = false
@@ -258,36 +251,14 @@ class PriorityQueue {
             for j in 0..<particles.count {
                 let p1 = particles[i]
                 let p2 = particles[j]
-                let name1 = p1.name
-                let name2 = p2.name
                 if i != j {
-                    
-                    
-                    
-                    // Only evaluate a collision if the two particles are not two that just hit each other
+                    // Only evaluate a collision if the two particles did not just hit each other
                     if !checkLastHitParticle(p1, p2) {
-                        if (name2 == "red" && name1 == "green") || (name1 == "red" && name2 == "green") {
-//                            print("r & g count: \(counter4)")
-                            
-                            if counter4 == 4 {
-//                                print("here")
-                                counter4 += 1
-                            }
-                        }
-                        
-                        
                         let timeToHit = p1.evaluateNextParticleCollision(p2)
-                        
                         if let timeToHit = timeToHit, timeToHit > 0 {
-                            
                             // If the two particles are not two that just hit each other, then they are free to hit each other again,
                             // so clear the lastHitParticle values:
                             clearLastHitParticles(p1, p2, particleSystem: particleSystem)
-                            
-                            if (name2 == "red" && name1 == "green") || (name1 == "red" && name2 == "green") {
-//                                print("r & g count: \(counter4)")
-                                counter4 += 1
-                            }
                             
                             p1.lastHitParticle = p2.particleIndex
                             p2.lastHitParticle = p1.particleIndex
@@ -302,7 +273,6 @@ class PriorityQueue {
         }
     }
     
-    var counter4 = 1
     // if the two particles just hit each other, return true:
     public func checkLastHitParticle(_ p1: Particle, _ p2: Particle) -> Bool {
         if p1.lastHitParticle == p2.particleIndex || p1.particleIndex == p2.lastHitParticle {
@@ -311,7 +281,6 @@ class PriorityQueue {
         return false
     }
     
-    // if the two particles just hit each other, return true.
     // The particle might have just hit a wall and then p2 will be nil
     public func clearLastHitParticles(_ p1: Particle, _ p2: Particle? = nil, particleSystem: ParticleSystem) {
         

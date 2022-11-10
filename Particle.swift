@@ -21,14 +21,11 @@ enum ParticleColor: String {
 class Particle: Hashable, Equatable {
     let id = UUID()
     
-    // Position
     var x: Double
     var y: Double
     // Direction, in radians. With 0/2.pi pointing to the right.
     var angle: Double
-    // Velocity
     var speed: Double
-    // Radius
     var radius: Double = 0.005
     var name: String
     var lastHitParticle: Int?
@@ -108,7 +105,6 @@ class Particle: Hashable, Equatable {
         let xDist = (self.x - particle.x) * width
         let yDist = (self.y - particle.y) * height
 
-
         let xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
         let yVeloDiff = (yVelocity(self.speed, self.angle) * 12) - (yVelocity(particle.speed, particle.angle) * 12)
         
@@ -134,10 +130,6 @@ class Particle: Hashable, Equatable {
         let collision = abs((netVector + sqrt(d)) / (sumOfVelocitiesSquared))
         
         if collision > 0 {
-            
-            if particle.name == "blue" && self.name == "yellow" {
-//                print("here")
-            }
             return collision
         }
         return nil
