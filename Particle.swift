@@ -21,23 +21,23 @@ enum ParticleColor: String {
 class Particle: Hashable, Equatable {
     let id = UUID()
     
-    // Position
     var x: Double
     var y: Double
     // Direction, in radians. With 0/2.pi pointing to the right.
     var angle: Double
-    // Velocity
     var speed: Double
-    // Radius
     var radius: Double = 0.005
     var name: String
+    var lastHitParticle: Int?
+    var particleIndex: Int
     
-    init(x: Double, y: Double, angle: Double, speed: Double, name: String) {
+    init(x: Double, y: Double, angle: Double, speed: Double, name: String, particleIndex: Int) {
         self.x = x
         self.y = y
         self.angle = angle
         self.speed = speed
         self.name = name
+        self.particleIndex = particleIndex
     }
     
     static func ==(lhs: Particle, rhs: Particle) -> Bool {
@@ -105,33 +105,29 @@ class Particle: Hashable, Equatable {
         let xDist = (self.x - particle.x) * width
         let yDist = (self.y - particle.y) * height
 
-        var xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
+        let xVeloDiff = (xVelocity(self.speed, self.angle) * 8.4) - (xVelocity(particle.speed, particle.angle) * 8.4)
         let yVeloDiff = (yVelocity(self.speed, self.angle) * 12) - (yVelocity(particle.speed, particle.angle) * 12)
         
-        var netVector = xDist * xVeloDiff + yDist * yVeloDiff
+        let netVector = xDist * xVeloDiff + yDist * yVeloDiff
         
         if netVector > 0 {
             return -1
         }
 
-        // netVector is m*m / s
-        // sum of velocities squared is m*m/s*s
-        // sum of distances squared is m*m
         let sumOfVelocitiesSquared = ((xVeloDiff ) * (xVeloDiff )) + (yVeloDiff * yVeloDiff)
         let sumOfDistancesSquared = (xDist * xDist) + (yDist * yDist)
     
         _ = calculateRadius()
 
-        let twoRadiuses = 2.0// * 0.2
+        let twoRadiuses = 42.0 // This is an approximation.
         
         let d = (netVector * netVector) - sumOfVelocitiesSquared * (sumOfDistancesSquared - twoRadiuses * twoRadiuses)
-        // = m*m*m*m / s*s - m*m/s*s * (m*m) = m*m*m*m / s*s
-        if d < 0 {
+        
+        if d < 0.01 {
             return -1
         }
-        // sqrt d is m*m / s
+        
         let collision = abs((netVector + sqrt(d)) / (sumOfVelocitiesSquared))
-       // collision is mm/s / mm/ss = mmss / smm = s
         
         if collision > 0 {
             return collision
@@ -150,10 +146,8 @@ class Particle: Hashable, Equatable {
         // going down:
         if ( radians > 0  && radians < .pi ) {
             yVelocity = sin(radians) * speed
-            print("yVelocity: \(yVelocity)")
         } else {
             yVelocity = sin(radians) * speed
-            print("yVelocity: \(yVelocity)")
         }
         return yVelocity
     }

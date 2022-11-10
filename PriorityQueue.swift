@@ -17,9 +17,10 @@ class PriorityQueue {
     // Add a new value to the Priority Queue and delete the maximum value if the size of the Priority Queue exceeds the max.
     // This amounts to deleting the updateEvent that is the furthest away from now to occur:
     public func insert<T: Comparable>(x: T) where T: ParticleUpdateEvent {
+        
         if PQ.count == 0 {
             // Make a placeholder update event for index zero; something we must do because Priority Queues start at index 1:
-            let p1 = Particle.init(x: -1, y: -1, angle: 0, speed: 0, name: "Orange")
+            let p1 = Particle.init(x: -1, y: -1, angle: 0, speed: 0, name: "Orange", particleIndex: -1)
             PQ.append(ParticleUpdateEvent.init(P1: p1, P2: nil, updateTime: Date()))
         }
         
@@ -31,47 +32,31 @@ class PriorityQueue {
             if PQ.count > maxPQSize {
                 PQ = deleteMaximum(PQ)
             }
-//            print("appended")
-        } else {
-            print("preexisting")
         }
     }
     
-    // If there's already an event in the queue with the particle in question, and the existing event will occur sooner, then it's a preexisting event, and return true
+    // If there's already an event in the queue with the particle in question, and the existing event will occur sooner, then it's a preexisting event
     private func checkPreexisting(x: ParticleUpdateEvent) -> Bool {
-        // Consider incoming update event with one particle;
-        // compare it to all the existing events with one or two particles.
-        // If an existing event occurs earlier, we don't want to append, so we return true.
-        // If an existing event occurs later, we want to get rid of it and keep traversing up the PQ
         var tempPQ = PQ
         if x.p2 == nil {
             for (index, event) in PQ.reversed().enumerated() {
                 if event.p1 == x.p1 || event.p2 == x.p1 {
                     if event.updateTime < x.updateTime {
                         return true
-                    } else {
-                        if index != PQ.count {
-                            tempPQ.remove(at: PQ.count - index - 1)
-                        } else {
-                            print("")
-                        }
+                    } else if index != PQ.count {
+                        tempPQ.remove(at: PQ.count - index - 1)
                     }
                 }
             }
         }
-        
         
         if x.p2 != nil {
             for (index, event) in PQ.reversed().enumerated() {
                 if event.p1 == x.p2 || event.p1 == x.p1 || event.p2 == x.p2 || event.p2 == x.p1 {
                     if event.updateTime < x.updateTime {
                         return true
-                    } else {
-                        if index != PQ.count {
-                            tempPQ.remove(at: PQ.count - index - 1)
-                        } else {
-                            print("")
-                        }
+                    } else if index != PQ.count {
+                        tempPQ.remove(at: PQ.count - index - 1)
                     }
                 }
             }
@@ -174,30 +159,43 @@ class PriorityQueue {
         return revAngle
     }
     
-    func reverseAngle(_ angle: Double) -> Double {
-        var revAngle: Double = 0.0
+    // A function that reverses angle assuming that the particles hit on center.
+    func reverseAngleOnCollision(_ updateEvent: ParticleUpdateEvent) -> (Double, Double) {
+        var revAngleP1: Double = 0.0
+        var revAngleP2: Double = 0.0
+        let angle1 = updateEvent.p1.angle
+        let angle2 = updateEvent.p2?.angle ?? 0.0
+        let angleDiff = abs(angle1 - angle2)
         
-        if angle >= 0 && angle < .pi {
-            revAngle = angle + .pi
-        } else if angle >= .pi && angle <= 2 * .pi {
-            revAngle = angle - .pi
-        } else if angle == 2 * .pi {
-            revAngle = .pi
+        if angle1 < angle2 {
+            revAngleP1 = angle1 + angleDiff
+            revAngleP2 = angle2 - angleDiff
+        } else {
+            revAngleP1 = angle1 - angleDiff
+            revAngleP2 = angle2 + angleDiff
         }
-        
-        return revAngle
+       
+        revAngleP1 = reduceAngles(revAngleP1)
+        revAngleP2 = reduceAngles(revAngleP2)
+        return (revAngleP1, revAngleP2)
     }
     
-    var counter1 = 0
+    func reduceAngles(_ radians: Double) -> Double {
+        if radians < 2 * .pi {
+            return radians
+        } else if radians >= (2 * .pi) && radians < (4 * .pi) {
+            return radians - (2 * .pi)
+        } else {
+            fatalError("too many rads")
+        }
+    }
+    
     public func runPriorityQueue(particleSystem: ParticleSystem) {
         var done: Bool = false
         var updateEvent: ParticleUpdateEvent = PQ[PQ.count - 1]
         var eventOccurred = false
-        
         while !done && PQ.count > 1 {
             updateEvent = PQ[PQ.count - 1]
-            // Evaluate current event, then evaluate next events.
-            
             if updateEvent.updateTime <= Date() && updateEvent.p2 == nil {
                 evaluateCurrentWallCollision(updateEvent)
                 PQ = deleteMinimum(PQ)
@@ -210,7 +208,6 @@ class PriorityQueue {
                 done = true
             }
         }
-        
         if eventOccurred && ( done || PQ.count == 1) {
             evaluateNextCollisions(particleSystem: particleSystem)
             eventOccurred = false
@@ -223,8 +220,8 @@ class PriorityQueue {
         let particles = particleSystem.particles
         // Find all the wall collisions:
         for particle in particles {
-            let hTime = particle.timeUntilVertWallCollision()
-            let vTime = particle.timeUntilHorizWallCollision()
+            let vTime = particle.timeUntilVertWallCollision()
+            let hTime = particle.timeUntilHorizWallCollision()
             var timeToHit: Double = 0.0
             var wall: Wall
             
@@ -239,6 +236,9 @@ class PriorityQueue {
                 wall = Wall.h
             }
             if timeToHit > 0 {
+                // If the two particles are not two that just hit each other, then they are free to hit each other again,
+                // so clear the lastHitParticle values:
+                clearLastHitParticles(particle, nil, particleSystem: particleSystem)
                 let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
                 let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
                 let particleUpdateEvent = ParticleUpdateEvent(P1: particle, P2: nil, updateTime: updateDate, wall: wall)
@@ -246,44 +246,63 @@ class PriorityQueue {
             }
         }
         
-        print("1: \(PQ.map {$0.updateTime.timeIntervalSinceReferenceDate})")
-        
         // Find all the particle collisions:
         for i in 0..<particles.count {
             for j in 0..<particles.count {
                 let p1 = particles[i]
                 let p2 = particles[j]
                 if i != j {
-                    let timeToHit = p1.evaluateNextParticleCollision(p2)
-                    if let timeToHit = timeToHit, timeToHit > 0 {
-                        let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
-                        let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
-                        let particleUpdateEvent = ParticleUpdateEvent(P1: p1, P2: p2, updateTime: updateDate)
-                        self.insert(x: particleUpdateEvent)
+                    // Only evaluate a collision if the two particles did not just hit each other
+                    if !checkLastHitParticle(p1, p2) {
+                        let timeToHit = p1.evaluateNextParticleCollision(p2)
+                        if let timeToHit = timeToHit, timeToHit > 0 {
+                            // If the two particles are not two that just hit each other, then they are free to hit each other again,
+                            // so clear the lastHitParticle values:
+                            clearLastHitParticles(p1, p2, particleSystem: particleSystem)
+                            
+                            p1.lastHitParticle = p2.particleIndex
+                            p2.lastHitParticle = p1.particleIndex
+                            let updateSecondsFromNow = Date.timeIntervalSinceReferenceDate + timeToHit
+                            let updateDate = Date(timeIntervalSinceReferenceDate: updateSecondsFromNow)
+                            let particleUpdateEvent = ParticleUpdateEvent(P1: p1, P2: p2, updateTime: updateDate)
+                            self.insert(x: particleUpdateEvent)
+                        }
                     }
                 }
             }
         }
-        
-        print("2: \(PQ.map {$0.updateTime.timeIntervalSinceReferenceDate})")
-        var test = 1
     }
     
-    public func evaluateCurrentParticlesCollision(_ particleSystem: ParticleSystem, _ updateEvent: ParticleUpdateEvent) {// Since it's a wall event, there's only one particle, p1:
-        var ps = particleSystem
+    // if the two particles just hit each other, return true:
+    public func checkLastHitParticle(_ p1: Particle, _ p2: Particle) -> Bool {
+        if p1.lastHitParticle == p2.particleIndex || p1.particleIndex == p2.lastHitParticle {
+            return true
+        }
+        return false
+    }
+    
+    // The particle might have just hit a wall and then p2 will be nil
+    public func clearLastHitParticles(_ p1: Particle, _ p2: Particle? = nil, particleSystem: ParticleSystem) {
+        
+        if let hitP1 = p1.lastHitParticle {
+            particleSystem.particles[hitP1].lastHitParticle = nil
+            p1.lastHitParticle = nil
+        }
+        
+        if let p2 = p2, let hitP2 = p2.lastHitParticle {
+            particleSystem.particles[hitP2].lastHitParticle = nil
+            p2.lastHitParticle = nil
+        }
+    }
+    
+    public func evaluateCurrentParticlesCollision(_ particleSystem: ParticleSystem, _ updateEvent: ParticleUpdateEvent) {
         let p1 = updateEvent.p1
-        let p2 = updateEvent.p2
-        p1.angle = reverseAngle(p1.angle)
-        if let p2 = p2 {
-            p2.angle = reverseAngle(p2.angle)
-            if p2.angle > 6.28 && p2.angle < 6.3 {
-                p2.angle = 0
-            }
+        if let p2 = updateEvent.p2 {
+            (p1.angle, p2.angle) = reverseAngleOnCollision(updateEvent)
         }
     }
     
     public func evaluateCurrentWallCollision(_ updateEvent: ParticleUpdateEvent) {
-        // Since it's a wall event, there's only one particle, p1:
         let particle = updateEvent.p1
         let xPosition = updateEvent.p1.x
         let yPosition = updateEvent.p1.y
